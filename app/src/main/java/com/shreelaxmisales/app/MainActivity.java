@@ -87,6 +87,45 @@ public class MainActivity extends AppCompatActivity {
         focusQuantity();
     }
 
+        @Override
+    protected void onNewIntent(Intent intent) {
+
+        super.onNewIntent(intent);
+
+        setIntent(intent);
+
+        if (intent.getBooleanExtra(
+                "advance_invoice",
+                false
+        )) {
+
+            // Move to the next invoice number
+            advanceInvoiceNumber();
+
+            // Display the new invoice number
+            setupInvoiceNumber();
+
+            // Clear the previous bill
+            billItems.clear();
+
+            grandTotal = 0.0;
+
+            updateTotal();
+
+            itemCountText.setText(
+                    "0 items added"
+            );
+
+            lastItemText.setText(
+                    "Ready for next item"
+            );
+
+            clearCurrentItem();
+
+            // Ready for a completely new bill
+            focusQuantity();
+        }
+    }
     // =============================================================
     // NUMERIC FIELDS
     // =============================================================
@@ -857,6 +896,65 @@ public class MainActivity extends AppCompatActivity {
                 )
         );
     }
+
+    private String formatInvoiceNumber(
+        String month,
+        int number
+) {
+
+    return String.format(
+            Locale.ENGLISH,
+            "%s %02d",
+            month,
+            number
+    );
+}
+
+    private void advanceInvoiceNumber() {
+
+    String month =
+            new SimpleDateFormat(
+                    "MMM",
+                    Locale.ENGLISH
+            )
+                    .format(new Date())
+                    .toUpperCase(Locale.ENGLISH);
+
+    String savedMonth =
+            preferences.getString(
+                    LAST_MONTH,
+                    ""
+            );
+
+    int nextNumber;
+
+    if (!month.equals(savedMonth)) {
+
+        nextNumber = 1;
+
+    } else {
+
+        int currentNumber =
+                preferences.getInt(
+                        LAST_NUMBER,
+                        1
+                );
+
+        nextNumber =
+                currentNumber + 1;
+    }
+
+    preferences.edit()
+            .putString(
+                    LAST_MONTH,
+                    month
+            )
+            .putInt(
+                    LAST_NUMBER,
+                    nextNumber
+            )
+            .apply();
+}
 
     // =============================================================
     // HELPERS
