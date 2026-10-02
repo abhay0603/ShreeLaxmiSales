@@ -1,6 +1,7 @@
 package com.shreelaxmisales.app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -35,17 +36,8 @@ public class MainActivity extends AppCompatActivity {
 
     private double grandTotal = 0.0;
 
-    /*
-     * This is the field that receives keypad input.
-     * Normally it is Quantity or Rate.
-     */
     private EditText activeField;
 
-    /*
-     * Calculator state.
-     * These buttons remain available, but they are secondary
-     * to the normal Quantity × Rate → NEXT workflow.
-     */
     private String calculatorOperator = "";
     private double calculatorValue = 0.0;
     private boolean waitingForSecondValue = false;
@@ -61,10 +53,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        // ---------------------------------------------------------
-        // FIND VIEWS
-        // ---------------------------------------------------------
 
         itemName = findViewById(R.id.itemName);
         quantity = findViewById(R.id.quantity);
@@ -84,10 +72,6 @@ public class MainActivity extends AppCompatActivity {
                         MODE_PRIVATE
                 );
 
-        // ---------------------------------------------------------
-        // INITIAL SETUP
-        // ---------------------------------------------------------
-
         setupInvoiceNumber();
 
         setupNumericFields();
@@ -104,16 +88,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // =============================================================
-    // NUMERIC FIELD SETUP
+    // NUMERIC FIELDS
     // =============================================================
 
     private void setupNumericFields() {
 
-        /*
-         * IMPORTANT:
-         * Do NOT show the Android keyboard for Quantity/Rate.
-         * The app's own keypad is used instead.
-         */
         quantity.setShowSoftInputOnFocus(false);
         rate.setShowSoftInputOnFocus(false);
 
@@ -142,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
                 view -> {
 
                     activeField = quantity;
-
                     hideKeyboard();
                 }
         );
@@ -151,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
                 view -> {
 
                     activeField = rate;
-
                     hideKeyboard();
                 }
         );
@@ -211,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // =============================================================
-    // LARGE × BUTTON
+    // MULTIPLY BUTTON
     // =============================================================
 
     private void setupMultiplyButton() {
@@ -219,26 +196,15 @@ public class MainActivity extends AppCompatActivity {
         btnMultiply.setOnClickListener(
                 view -> {
 
-                    /*
-                     * × is primarily a BILLING button.
-                     *
-                     * Quantity → × → Rate
-                     */
-
                     String value =
                             quantity.getText()
                                     .toString()
                                     .trim();
 
                     if (value.isEmpty()) {
-
                         quantity.setText("0");
                     }
 
-                    /*
-                     * Store the quantity for the optional
-                     * calculator operation as well.
-                     */
                     calculatorValue =
                             getNumber(quantity);
 
@@ -311,15 +277,14 @@ public class MainActivity extends AppCompatActivity {
                             + (billItems.size() + 1);
         }
 
-        BillItem item =
+        billItems.add(
                 new BillItem(
                         name,
                         qty,
                         price,
                         itemTotal
-                );
-
-        billItems.add(item);
+                )
+        );
 
         grandTotal += itemTotal;
 
@@ -333,9 +298,6 @@ public class MainActivity extends AppCompatActivity {
 
         clearCurrentItem();
 
-        /*
-         * Immediately ready for next quantity.
-         */
         focusQuantity();
     }
 
@@ -385,7 +347,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupKeypad() {
 
-        // Numbers
         setNumberButton(R.id.btn0, "0");
         setNumberButton(R.id.btn1, "1");
         setNumberButton(R.id.btn2, "2");
@@ -397,40 +358,33 @@ public class MainActivity extends AppCompatActivity {
         setNumberButton(R.id.btn8, "8");
         setNumberButton(R.id.btn9, "9");
 
-        // Double zero
         setNumberButton(R.id.btn00, "00");
 
-        // Decimal
         findViewById(R.id.btnDecimal)
                 .setOnClickListener(
                         view -> appendDecimal()
                 );
 
-        // Sign
         findViewById(R.id.btnSign)
                 .setOnClickListener(
                         view -> toggleSign()
                 );
 
-        // Backspace
         findViewById(R.id.btnBackspace)
                 .setOnClickListener(
                         view -> backspace()
                 );
 
-        // Clear
         findViewById(R.id.btnClear)
                 .setOnClickListener(
                         view -> clearActiveField()
                 );
 
-        // Percentage
         findViewById(R.id.btnPercent)
                 .setOnClickListener(
                         view -> percentage()
                 );
 
-        // Calculator operators
         findViewById(R.id.btnPlus)
                 .setOnClickListener(
                         view -> chooseOperator("+")
@@ -446,12 +400,6 @@ public class MainActivity extends AppCompatActivity {
                         view -> chooseOperator("/")
                 );
 
-        /*
-         * The large × button is already connected separately
-         * because it has the special billing behavior.
-         */
-
-        // Equals
         findViewById(R.id.btnEquals)
                 .setOnClickListener(
                         view -> calculateResult()
@@ -472,7 +420,6 @@ public class MainActivity extends AppCompatActivity {
     private void appendNumber(String number) {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -489,7 +436,6 @@ public class MainActivity extends AppCompatActivity {
                             .toString();
 
             if (current.equals("0")) {
-
                 current = "";
             }
 
@@ -506,7 +452,6 @@ public class MainActivity extends AppCompatActivity {
     private void appendDecimal() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -517,7 +462,6 @@ public class MainActivity extends AppCompatActivity {
         if (!current.contains(".")) {
 
             if (current.isEmpty()) {
-
                 current = "0";
             }
 
@@ -534,7 +478,6 @@ public class MainActivity extends AppCompatActivity {
     private void toggleSign() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -544,7 +487,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (current.isEmpty()
                 || current.equals("0")) {
-
             return;
         }
 
@@ -569,7 +511,6 @@ public class MainActivity extends AppCompatActivity {
     private void backspace() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -599,7 +540,6 @@ public class MainActivity extends AppCompatActivity {
     private void clearActiveField() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -612,16 +552,11 @@ public class MainActivity extends AppCompatActivity {
         waitingForSecondValue = false;
     }
 
-    // =============================================================
-    // SECONDARY CALCULATOR FUNCTIONS
-    // =============================================================
-
     private void chooseOperator(
             String operator
     ) {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -637,12 +572,10 @@ public class MainActivity extends AppCompatActivity {
     private void calculateResult() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
         if (calculatorOperator.isEmpty()) {
-
             return;
         }
 
@@ -697,7 +630,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             default:
-
                 return;
         }
 
@@ -719,7 +651,6 @@ public class MainActivity extends AppCompatActivity {
     private void percentage() {
 
         if (activeField == null) {
-
             focusQuantity();
         }
 
@@ -742,20 +673,20 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btnFinalTotal)
                 .setOnClickListener(
-                        view -> showBillSummary()
+                        view -> openBillPreview()
                 );
 
         findViewById(R.id.btnGenerateBill)
                 .setOnClickListener(
-                        view -> showBillSummary()
+                        view -> openBillPreview()
                 );
     }
 
     // =============================================================
-    // BILL PREVIEW
+    // OPEN BILL PREVIEW
     // =============================================================
 
-    private void showBillSummary() {
+    private void openBillPreview() {
 
         if (billItems.isEmpty()) {
 
@@ -768,92 +699,91 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        StringBuilder bill =
-                new StringBuilder();
+        Intent intent =
+                new Intent(
+                        MainActivity.this,
+                        BillPreviewActivity.class
+                );
 
-        bill.append(
-                "SHREE LAXMI SALES\n"
+        /*
+         * Pass the complete bill to the preview screen.
+         */
+
+        ArrayList<String> names =
+                new ArrayList<>();
+
+        ArrayList<String> quantities =
+                new ArrayList<>();
+
+        ArrayList<String> rates =
+                new ArrayList<>();
+
+        ArrayList<String> amounts =
+                new ArrayList<>();
+
+        for (BillItem item : billItems) {
+
+            names.add(item.name);
+
+            quantities.add(
+                    formatNumber(
+                            item.quantity
+                    )
+            );
+
+            rates.add(
+                    formatNumber(
+                            item.rate
+                    )
+            );
+
+            amounts.add(
+                    formatMoney(
+                            item.total
+                    )
+            );
+        }
+
+        intent.putStringArrayListExtra(
+                "item_names",
+                names
         );
 
-        bill.append(
-                "9811393412\n\n"
+        intent.putStringArrayListExtra(
+                "item_quantities",
+                quantities
         );
 
-        bill.append(
-                "Invoice: "
-        )
-                .append(
-                        invoicePreview.getText()
-                )
-                .append("\n");
+        intent.putStringArrayListExtra(
+                "item_rates",
+                rates
+        );
 
-        bill.append(
+        intent.putStringArrayListExtra(
+                "item_amounts",
+                amounts
+        );
+
+        intent.putExtra(
+                "grand_total",
+                formatMoney(grandTotal)
+        );
+
+        intent.putExtra(
+                "invoice_number",
+                invoicePreview.getText()
+                        .toString()
+        );
+
+        intent.putExtra(
+                "date_time",
                 new SimpleDateFormat(
-                        "dd MMM yyyy (hh:mm a)",
+                        "dd MMM yyyy, hh:mm a",
                         Locale.getDefault()
                 ).format(new Date())
         );
 
-        bill.append("\n\n");
-
-        for (
-                int i = 0;
-                i < billItems.size();
-                i++
-        ) {
-
-            BillItem item =
-                    billItems.get(i);
-
-            bill.append(
-                    i + 1
-            )
-                    .append(". ")
-                    .append(item.name)
-                    .append("\n");
-
-            bill.append("   ")
-                    .append(
-                            formatNumber(
-                                    item.quantity
-                            )
-                    )
-                    .append(" × ₹")
-                    .append(
-                            formatNumber(
-                                    item.rate
-                            )
-                    )
-                    .append(" = ₹")
-                    .append(
-                            formatMoney(
-                                    item.total
-                            )
-                    )
-                    .append("\n");
-        }
-
-        bill.append(
-                "\n--------------------\n"
-        );
-
-        bill.append(
-                "TOTAL: ₹"
-        )
-                .append(
-                        formatMoney(
-                                grandTotal
-                        )
-                );
-
-        new android.app.AlertDialog.Builder(this)
-                .setTitle("Bill Preview")
-                .setMessage(bill.toString())
-                .setPositiveButton(
-                        "OK",
-                        null
-                )
-                .show();
+        startActivity(intent);
     }
 
     // =============================================================
@@ -935,7 +865,6 @@ public class MainActivity extends AppCompatActivity {
     private double getActiveFieldValue() {
 
         if (activeField == null) {
-
             return 0.0;
         }
 
