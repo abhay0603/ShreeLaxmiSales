@@ -2,10 +2,7 @@ package com.shreelaxmisales.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -38,8 +35,17 @@ public class MainActivity extends AppCompatActivity {
 
     private double grandTotal = 0.0;
 
+    /*
+     * This is the field that receives keypad input.
+     * Normally it is Quantity or Rate.
+     */
     private EditText activeField;
 
+    /*
+     * Calculator state.
+     * These buttons remain available, but they are secondary
+     * to the normal Quantity × Rate → NEXT workflow.
+     */
     private String calculatorOperator = "";
     private double calculatorValue = 0.0;
     private boolean waitingForSecondValue = false;
@@ -56,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        // ---------------------------------------------------------
+        // FIND VIEWS
+        // ---------------------------------------------------------
+
         itemName = findViewById(R.id.itemName);
         quantity = findViewById(R.id.quantity);
         rate = findViewById(R.id.rate);
@@ -68,67 +78,87 @@ public class MainActivity extends AppCompatActivity {
         btnMultiply = findViewById(R.id.btnMultiply);
         btnNextItem = findViewById(R.id.btnNextItem);
 
-        preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
+        preferences =
+                getSharedPreferences(
+                        PREFS,
+                        MODE_PRIVATE
+                );
+
+        // ---------------------------------------------------------
+        // INITIAL SETUP
+        // ---------------------------------------------------------
 
         setupInvoiceNumber();
 
         setupNumericFields();
 
-        setupCalculator();
+        setupKeypad();
 
         setupMultiplyButton();
 
-        setupNextItem();
+        setupNextItemButton();
 
-        setupOtherButtons();
+        setupBillButtons();
 
         focusQuantity();
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // NUMERIC FIELD SETUP
-    // ------------------------------------------------------------
+    // =============================================================
 
     private void setupNumericFields() {
 
+        /*
+         * IMPORTANT:
+         * Do NOT show the Android keyboard for Quantity/Rate.
+         * The app's own keypad is used instead.
+         */
         quantity.setShowSoftInputOnFocus(false);
         rate.setShowSoftInputOnFocus(false);
 
         quantity.setCursorVisible(false);
         rate.setCursorVisible(false);
 
-        quantity.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                activeField = quantity;
-            }
-        });
+        quantity.setOnFocusChangeListener(
+                (view, hasFocus) -> {
 
-        rate.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                activeField = rate;
-            }
-        });
+                    if (hasFocus) {
+                        activeField = quantity;
+                    }
+                }
+        );
 
-        quantity.setOnClickListener(v -> {
-            activeField = quantity;
-            hideKeyboard();
-        });
+        rate.setOnFocusChangeListener(
+                (view, hasFocus) -> {
 
-        rate.setOnClickListener(v -> {
-            activeField = rate;
-            hideKeyboard();
-        });
+                    if (hasFocus) {
+                        activeField = rate;
+                    }
+                }
+        );
 
-        itemName.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                activeField = null;
-            }
-        });
+        quantity.setOnClickListener(
+                view -> {
+
+                    activeField = quantity;
+
+                    hideKeyboard();
+                }
+        );
+
+        rate.setOnClickListener(
+                view -> {
+
+                    activeField = rate;
+
+                    hideKeyboard();
+                }
+        );
     }
 
     private void focusQuantity() {
 
-        itemName.clearFocus();
         rate.clearFocus();
 
         quantity.requestFocus();
@@ -137,7 +167,9 @@ public class MainActivity extends AppCompatActivity {
 
         hideKeyboard();
 
-        quantity.setSelection(quantity.length());
+        quantity.setSelection(
+                quantity.length()
+        );
     }
 
     private void focusRate() {
@@ -150,60 +182,96 @@ public class MainActivity extends AppCompatActivity {
 
         hideKeyboard();
 
-        rate.setSelection(rate.length());
+        rate.setSelection(
+                rate.length()
+        );
     }
 
     private void hideKeyboard() {
 
         View view = getCurrentFocus();
 
-        if (view != null) {
+        if (view == null) {
+            return;
+        }
 
-            InputMethodManager imm =
-                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager manager =
+                (InputMethodManager)
+                        getSystemService(
+                                Context.INPUT_METHOD_SERVICE
+                        );
 
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(
-                        view.getWindowToken(),
-                        0
-                );
-            }
+        if (manager != null) {
+
+            manager.hideSoftInputFromWindow(
+                    view.getWindowToken(),
+                    0
+            );
         }
     }
 
-    // ------------------------------------------------------------
-    // MULTIPLY BUTTON
-    // ------------------------------------------------------------
+    // =============================================================
+    // LARGE × BUTTON
+    // =============================================================
 
     private void setupMultiplyButton() {
 
-        btnMultiply.setOnClickListener(v -> {
+        btnMultiply.setOnClickListener(
+                view -> {
 
-            String quantityValue = quantity.getText().toString().trim();
+                    /*
+                     * × is primarily a BILLING button.
+                     *
+                     * Quantity → × → Rate
+                     */
 
-            if (quantityValue.isEmpty()) {
-                quantity.setText("0");
-            }
+                    String value =
+                            quantity.getText()
+                                    .toString()
+                                    .trim();
 
-            focusRate();
-        });
+                    if (value.isEmpty()) {
+
+                        quantity.setText("0");
+                    }
+
+                    /*
+                     * Store the quantity for the optional
+                     * calculator operation as well.
+                     */
+                    calculatorValue =
+                            getNumber(quantity);
+
+                    calculatorOperator = "*";
+
+                    waitingForSecondValue = true;
+
+                    focusRate();
+                }
+        );
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // NEXT ITEM
-    // ------------------------------------------------------------
+    // =============================================================
 
-    private void setupNextItem() {
+    private void setupNextItemButton() {
 
-        btnNextItem.setOnClickListener(v -> addCurrentItem());
+        btnNextItem.setOnClickListener(
+                view -> addCurrentItem()
+        );
     }
 
     private void addCurrentItem() {
 
-        double qty = getNumber(quantity);
-        double price = getNumber(rate);
+        double qty =
+                getNumber(quantity);
+
+        double price =
+                getNumber(rate);
 
         if (qty <= 0) {
+
             Toast.makeText(
                     this,
                     "Enter quantity first",
@@ -211,10 +279,12 @@ public class MainActivity extends AppCompatActivity {
             ).show();
 
             focusQuantity();
+
             return;
         }
 
         if (price < 0) {
+
             Toast.makeText(
                     this,
                     "Enter a valid rate",
@@ -222,35 +292,66 @@ public class MainActivity extends AppCompatActivity {
             ).show();
 
             focusRate();
+
             return;
         }
 
-        double itemTotal = qty * price;
+        double itemTotal =
+                qty * price;
 
-        String name = itemName.getText()
-                .toString()
-                .trim();
+        String name =
+                itemName.getText()
+                        .toString()
+                        .trim();
 
         if (name.isEmpty()) {
-            name = "Item " + (billItems.size() + 1);
+
+            name =
+                    "Item "
+                            + (billItems.size() + 1);
         }
 
-        billItems.add(
+        BillItem item =
                 new BillItem(
                         name,
                         qty,
                         price,
                         itemTotal
-                )
-        );
+                );
+
+        billItems.add(item);
 
         grandTotal += itemTotal;
 
         updateTotal();
 
+        updateItemStatus(
+                qty,
+                price,
+                itemTotal
+        );
+
+        clearCurrentItem();
+
+        /*
+         * Immediately ready for next quantity.
+         */
+        focusQuantity();
+    }
+
+    private void updateItemStatus(
+            double qty,
+            double price,
+            double itemTotal
+    ) {
+
+        int count =
+                billItems.size();
+
         itemCountText.setText(
-                billItems.size() + " item"
-                        + (billItems.size() == 1 ? "" : "s")
+                count
+                        + " item"
+                        + (count == 1 ? "" : "s")
                         + " added"
         );
 
@@ -261,10 +362,6 @@ public class MainActivity extends AppCompatActivity {
                         + " = ₹"
                         + formatMoney(itemTotal)
         );
-
-        clearCurrentItem();
-
-        focusQuantity();
     }
 
     private void clearCurrentItem() {
@@ -282,12 +379,13 @@ public class MainActivity extends AppCompatActivity {
         waitingForSecondValue = false;
     }
 
-    // ------------------------------------------------------------
-    // CALCULATOR
-    // ------------------------------------------------------------
+    // =============================================================
+    // KEYPAD
+    // =============================================================
 
-    private void setupCalculator() {
+    private void setupKeypad() {
 
+        // Numbers
         setNumberButton(R.id.btn0, "0");
         setNumberButton(R.id.btn1, "1");
         setNumberButton(R.id.btn2, "2");
@@ -299,55 +397,82 @@ public class MainActivity extends AppCompatActivity {
         setNumberButton(R.id.btn8, "8");
         setNumberButton(R.id.btn9, "9");
 
+        // Double zero
         setNumberButton(R.id.btn00, "00");
 
+        // Decimal
         findViewById(R.id.btnDecimal)
-                .setOnClickListener(v -> appendDecimal());
+                .setOnClickListener(
+                        view -> appendDecimal()
+                );
 
+        // Sign
         findViewById(R.id.btnSign)
-                .setOnClickListener(v -> toggleSign());
+                .setOnClickListener(
+                        view -> toggleSign()
+                );
 
+        // Backspace
         findViewById(R.id.btnBackspace)
-                .setOnClickListener(v -> backspace());
+                .setOnClickListener(
+                        view -> backspace()
+                );
 
+        // Clear
         findViewById(R.id.btnClear)
-                .setOnClickListener(v -> clearCalculator());
+                .setOnClickListener(
+                        view -> clearActiveField()
+                );
 
+        // Percentage
         findViewById(R.id.btnPercent)
-                .setOnClickListener(v -> percentage());
+                .setOnClickListener(
+                        view -> percentage()
+                );
 
+        // Calculator operators
         findViewById(R.id.btnPlus)
-                .setOnClickListener(v -> chooseOperator("+"));
+                .setOnClickListener(
+                        view -> chooseOperator("+")
+                );
 
         findViewById(R.id.btnMinus)
-                .setOnClickListener(v -> chooseOperator("-"));
+                .setOnClickListener(
+                        view -> chooseOperator("-")
+                );
 
         findViewById(R.id.btnDivide)
-                .setOnClickListener(v -> chooseOperator("/"));
+                .setOnClickListener(
+                        view -> chooseOperator("/")
+                );
 
-        findViewById(R.id.btnMultiply)
-                .setOnClickListener(v -> {
+        /*
+         * The large × button is already connected separately
+         * because it has the special billing behavior.
+         */
 
-                    calculatorOperator = "*";
-
-                    calculatorValue =
-                            getActiveFieldValue();
-
-                    waitingForSecondValue = true;
-
-                    focusRate();
-                });
+        // Equals
+        findViewById(R.id.btnEquals)
+                .setOnClickListener(
+                        view -> calculateResult()
+                );
     }
 
-    private void setNumberButton(int id, String value) {
+    private void setNumberButton(
+            int buttonId,
+            String value
+    ) {
 
-        findViewById(id)
-                .setOnClickListener(v -> appendNumber(value));
+        findViewById(buttonId)
+                .setOnClickListener(
+                        view -> appendNumber(value)
+                );
     }
 
     private void appendNumber(String number) {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
@@ -360,9 +485,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
 
             String current =
-                    activeField.getText().toString();
+                    activeField.getText()
+                            .toString();
 
             if (current.equals("0")) {
+
                 current = "";
             }
 
@@ -379,15 +506,18 @@ public class MainActivity extends AppCompatActivity {
     private void appendDecimal() {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
         String current =
-                activeField.getText().toString();
+                activeField.getText()
+                        .toString();
 
         if (!current.contains(".")) {
 
             if (current.isEmpty()) {
+
                 current = "0";
             }
 
@@ -404,14 +534,17 @@ public class MainActivity extends AppCompatActivity {
     private void toggleSign() {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
         String current =
-                activeField.getText().toString();
+                activeField.getText()
+                        .toString();
 
         if (current.isEmpty()
                 || current.equals("0")) {
+
             return;
         }
 
@@ -436,11 +569,13 @@ public class MainActivity extends AppCompatActivity {
     private void backspace() {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
         String current =
-                activeField.getText().toString();
+                activeField.getText()
+                        .toString();
 
         if (current.length() <= 1) {
 
@@ -461,9 +596,10 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    private void clearCalculator() {
+    private void clearActiveField() {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
@@ -476,57 +612,148 @@ public class MainActivity extends AppCompatActivity {
         waitingForSecondValue = false;
     }
 
+    // =============================================================
+    // SECONDARY CALCULATOR FUNCTIONS
+    // =============================================================
+
+    private void chooseOperator(
+            String operator
+    ) {
+
+        if (activeField == null) {
+
+            focusQuantity();
+        }
+
+        calculatorValue =
+                getActiveFieldValue();
+
+        calculatorOperator =
+                operator;
+
+        waitingForSecondValue = true;
+    }
+
+    private void calculateResult() {
+
+        if (activeField == null) {
+
+            focusQuantity();
+        }
+
+        if (calculatorOperator.isEmpty()) {
+
+            return;
+        }
+
+        double secondValue =
+                getActiveFieldValue();
+
+        double result;
+
+        switch (calculatorOperator) {
+
+            case "+":
+
+                result =
+                        calculatorValue
+                                + secondValue;
+
+                break;
+
+            case "-":
+
+                result =
+                        calculatorValue
+                                - secondValue;
+
+                break;
+
+            case "*":
+
+                result =
+                        calculatorValue
+                                * secondValue;
+
+                break;
+
+            case "/":
+
+                if (secondValue == 0) {
+
+                    Toast.makeText(
+                            this,
+                            "Cannot divide by zero",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    return;
+                }
+
+                result =
+                        calculatorValue
+                                / secondValue;
+
+                break;
+
+            default:
+
+                return;
+        }
+
+        activeField.setText(
+                formatNumber(result)
+        );
+
+        activeField.setSelection(
+                activeField.length()
+        );
+
+        calculatorValue = result;
+
+        calculatorOperator = "";
+
+        waitingForSecondValue = false;
+    }
+
     private void percentage() {
 
         if (activeField == null) {
+
             focusQuantity();
         }
 
         double value =
                 getActiveFieldValue();
 
-        value = value / 100.0;
+        value =
+                value / 100.0;
 
         activeField.setText(
                 formatNumber(value)
         );
     }
 
-    private void chooseOperator(String operator) {
+    // =============================================================
+    // BILL BUTTONS
+    // =============================================================
 
-        calculatorValue =
-                getActiveFieldValue();
-
-        calculatorOperator = operator;
-
-        waitingForSecondValue = true;
-    }
-
-    private double getActiveFieldValue() {
-
-        if (activeField == null) {
-            return 0.0;
-        }
-
-        return getNumber(activeField);
-    }
-
-    // ------------------------------------------------------------
-    // OTHER BUTTONS
-    // ------------------------------------------------------------
-
-    private void setupOtherButtons() {
+    private void setupBillButtons() {
 
         findViewById(R.id.btnFinalTotal)
-                .setOnClickListener(v -> showBillSummary());
+                .setOnClickListener(
+                        view -> showBillSummary()
+                );
 
         findViewById(R.id.btnGenerateBill)
-                .setOnClickListener(v -> showBillSummary());
+                .setOnClickListener(
+                        view -> showBillSummary()
+                );
     }
 
-    // ------------------------------------------------------------
-    // BILL SUMMARY
-    // ------------------------------------------------------------
+    // =============================================================
+    // BILL PREVIEW
+    // =============================================================
 
     private void showBillSummary() {
 
@@ -541,13 +768,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        StringBuilder bill = new StringBuilder();
+        StringBuilder bill =
+                new StringBuilder();
 
-        bill.append("SHREE LAXMI SALES\n");
-        bill.append("9811393412\n\n");
+        bill.append(
+                "SHREE LAXMI SALES\n"
+        );
 
-        bill.append("Invoice: ")
-                .append(invoicePreview.getText())
+        bill.append(
+                "9811393412\n\n"
+        );
+
+        bill.append(
+                "Invoice: "
+        )
+                .append(
+                        invoicePreview.getText()
+                )
                 .append("\n");
 
         bill.append(
@@ -559,51 +796,83 @@ public class MainActivity extends AppCompatActivity {
 
         bill.append("\n\n");
 
-        for (int i = 0; i < billItems.size(); i++) {
+        for (
+                int i = 0;
+                i < billItems.size();
+                i++
+        ) {
 
             BillItem item =
                     billItems.get(i);
 
-            bill.append(i + 1)
+            bill.append(
+                    i + 1
+            )
                     .append(". ")
                     .append(item.name)
                     .append("\n");
 
             bill.append("   ")
-                    .append(formatNumber(item.quantity))
+                    .append(
+                            formatNumber(
+                                    item.quantity
+                            )
+                    )
                     .append(" × ₹")
-                    .append(formatNumber(item.rate))
+                    .append(
+                            formatNumber(
+                                    item.rate
+                            )
+                    )
                     .append(" = ₹")
-                    .append(formatMoney(item.total))
+                    .append(
+                            formatMoney(
+                                    item.total
+                            )
+                    )
                     .append("\n");
         }
 
-        bill.append("\n--------------------\n");
+        bill.append(
+                "\n--------------------\n"
+        );
 
-        bill.append("TOTAL: ₹")
-                .append(formatMoney(grandTotal));
+        bill.append(
+                "TOTAL: ₹"
+        )
+                .append(
+                        formatMoney(
+                                grandTotal
+                        )
+                );
 
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Bill Preview")
                 .setMessage(bill.toString())
-                .setPositiveButton("OK", null)
+                .setPositiveButton(
+                        "OK",
+                        null
+                )
                 .show();
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // TOTAL
-    // ------------------------------------------------------------
+    // =============================================================
 
     private void updateTotal() {
 
         totalText.setText(
-                "₹" + formatMoney(grandTotal)
+                "₹"
+                        + formatMoney(
+                        grandTotal
+                )
         );
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // INVOICE NUMBER
-    // ------------------------------------------------------------
+    // =============================================================
 
     private void setupInvoiceNumber() {
 
@@ -613,7 +882,9 @@ public class MainActivity extends AppCompatActivity {
                         Locale.ENGLISH
                 )
                         .format(new Date())
-                        .toUpperCase(Locale.ENGLISH);
+                        .toUpperCase(
+                                Locale.ENGLISH
+                        );
 
         String savedMonth =
                 preferences.getString(
@@ -657,11 +928,23 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // HELPERS
-    // ------------------------------------------------------------
+    // =============================================================
 
-    private double getNumber(EditText field) {
+    private double getActiveFieldValue() {
+
+        if (activeField == null) {
+
+            return 0.0;
+        }
+
+        return getNumber(activeField);
+    }
+
+    private double getNumber(
+            EditText field
+    ) {
 
         try {
 
@@ -677,7 +960,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String formatNumber(double value) {
+    private String formatNumber(
+            double value
+    ) {
 
         if (value == (long) value) {
 
@@ -695,7 +980,9 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    private String formatMoney(double value) {
+    private String formatMoney(
+            double value
+    ) {
 
         return String.format(
                 Locale.ENGLISH,
@@ -704,9 +991,9 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // ------------------------------------------------------------
+    // =============================================================
     // BILL ITEM
-    // ------------------------------------------------------------
+    // =============================================================
 
     private static class BillItem {
 
