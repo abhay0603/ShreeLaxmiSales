@@ -1,441 +1,585 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#0B1020">
+    android:orientation="vertical"
+    android:background="@color/sls_background">
 
+    <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <!-- HEADER -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:paddingBottom="14dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SHREE LAXMI SALES"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Smart Billing"
-                    android:textColor="#8E9AAF"
-                    android:textSize="13sp"/>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/invoicePreview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="OCT 01"
-                android:textColor="#62A8FF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
-
-        </LinearLayout>
-
-
-        <!-- TOTAL CARD -->
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp"
-            android:background="#151D30">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CURRENT TOTAL"
-                android:textColor="#8793A8"
-                android:textSize="12sp"
-                android:textStyle="bold"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/totalText"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="₹0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="30sp"
-                    android:textStyle="bold"/>
-
-                <Button
-                    android:id="@+id/finalTotalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="52dp"
-                    android:text="FINAL TOTAL"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:backgroundTint="#2377E8"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-
-        <!-- ITEM NAME -->
-
-        <EditText
-            android:id="@+id/itemName"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="14dp"
-            android:hint="Item name  •  optional"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#667085"
-            android:textSize="16sp"
-            android:padding="14dp"
-            android:background="#151D30"/>
-
-
-        <!-- QUANTITY + RATE -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
-
-            <EditText
-                android:id="@+id/quantity"
-                android:layout_width="0dp"
-                android:layout_height="62dp"
-                android:layout_weight="1"
-                android:hint="Quantity"
-                android:inputType="numberDecimal"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#667085"
-                android:textSize="17sp"
-                android:padding="14dp"
-                android:background="#151D30"/>
-
-            <Space
-                android:layout_width="10dp"
-                android:layout_height="1dp"/>
-
-            <EditText
-                android:id="@+id/rate"
-                android:layout_width="0dp"
-                android:layout_height="62dp"
-                android:layout_weight="1"
-                android:hint="Rate ₹"
-                android:inputType="numberDecimal"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#667085"
-                android:textSize="17sp"
-                android:padding="14dp"
-                android:background="#151D30"/>
-
-        </LinearLayout>
-
-
-        <!-- ITEM TOTAL -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:background="#10182A">
+                android:text="SHREE LAXMI SALES"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ITEM TOTAL"
-                android:textColor="#8793A8"
-                android:textSize="12sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/itemTotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="₹0"
-                android:textColor="#53B7FF"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:layout_marginTop="2dp"
+                android:text="Fast Billing"
+                android:textColor="@color/sls_text_secondary"
+                android:textSize="13sp" />
 
         </LinearLayout>
-
-
-        <!-- ITEMS -->
 
         <TextView
+            android:id="@+id/invoicePreview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="ITEMS"
-            android:textColor="#8793A8"
+            android:background="@drawable/bg_secondary_button"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="OCT 01"
+            android:textColor="@color/sls_gold_light"
             android:textSize="12sp"
-            android:textStyle="bold"/>
-
-        <LinearLayout
-            android:id="@+id/itemList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="6dp"/>
-
-
-        <!-- CALCULATOR -->
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="CALCULATOR"
-            android:textColor="#8793A8"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
-
-        <LinearLayout
-            android:id="@+id/calculator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="6dp">
-
-            <!-- ROW 1 -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp">
-
-                <Button
-                    android:id="@+id/clearButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="C"/>
-
-                <Button
-                    android:id="@+id/percentButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="%"/>
-
-                <Button
-                    android:id="@+id/divideButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="÷"/>
-
-                <Button
-                    android:id="@+id/backspaceButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="⌫"/>
-
-            </LinearLayout>
-
-            <!-- ROW 2 -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp">
-
-                <Button
-                    android:id="@+id/sevenButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="7"/>
-
-                <Button
-                    android:id="@+id/eightButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="8"/>
-
-                <Button
-                    android:id="@+id/nineButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="9"/>
-
-                <Button
-                    android:id="@+id/multiplyButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="×"/>
-
-            </LinearLayout>
-
-            <!-- ROW 3 -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp">
-
-                <Button
-                    android:id="@+id/fourButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="4"/>
-
-                <Button
-                    android:id="@+id/fiveButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="5"/>
-
-                <Button
-                    android:id="@+id/sixButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="6"/>
-
-                <Button
-                    android:id="@+id/minusButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="−"/>
-
-            </LinearLayout>
-
-            <!-- ROW 4 -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp">
-
-                <Button
-                    android:id="@+id/oneButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="1"/>
-
-                <Button
-                    android:id="@+id/twoButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="2"/>
-
-                <Button
-                    android:id="@+id/threeButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="3"/>
-
-                <Button
-                    android:id="@+id/plusButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="+"/>
-
-            </LinearLayout>
-
-            <!-- ROW 5 -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp">
-
-                <Button
-                    android:id="@+id/signButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="+/−"/>
-
-                <Button
-                    android:id="@+id/zeroButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="0"/>
-
-                <Button
-                    android:id="@+id/doubleZeroButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="00"/>
-
-                <Button
-                    android:id="@+id/equalButton"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="="/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-
-        <!-- NEXT ITEM -->
-
-        <Button
-            android:id="@+id/nextItemButton"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="14dp"
-            android:text="＋  NEXT ITEM"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:backgroundTint="#1B273D"/>
-
-
-        <!-- GENERATE BILL -->
-
-        <Button
-            android:id="@+id/generateBillButton"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:text="GENERATE BILL"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:backgroundTint="#D49A32"/>
+            android:textStyle="bold" />
 
     </LinearLayout>
 
-</ScrollView>
+    <!-- ITEM NAME -->
+    <EditText
+        android:id="@+id/itemName"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_input"
+        android:hint="Item name (optional)"
+        android:inputType="textCapSentences"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:textColor="@color/sls_white"
+        android:textColorHint="@color/sls_text_secondary"
+        android:textSize="15sp" />
+
+    <!-- QUANTITY / X / RATE -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="QUANTITY"
+                android:textColor="@color/sls_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/quantity"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_input"
+                android:gravity="center"
+                android:inputType="numberDecimal"
+                android:text="0"
+                android:textColor="@color/sls_white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- LARGE X BUTTON -->
+        <Button
+            android:id="@+id/btnMultiply"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_calculator_multiply"
+            android:text="×"
+            android:textColor="@color/sls_white"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RATE"
+                android:textColor="@color/sls_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/rate"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_input"
+                android:gravity="center"
+                android:inputType="numberDecimal"
+                android:text="0"
+                android:textColor="@color/sls_white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- BILL STATUS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/itemCountText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0 items added"
+            android:textColor="@color/sls_text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/lastItemText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/sls_gold_light"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- CALCULATOR -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="12dp"
+        android:orientation="vertical">
+
+        <!-- ROW 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnClear"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="C"
+                android:textColor="@color/sls_danger"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btnPercent"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="%"
+                android:textColor="@color/sls_white"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btnDivide"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="÷"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btnBackspace"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="⌫"
+                android:textColor="@color/sls_white"
+                android:textSize="20sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+        </LinearLayout>
+
+        <!-- ROW 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn7"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="7"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btn8"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="8"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btn9"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="9"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btnMinus"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="−"
+                android:textColor="@color/sls_white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+        </LinearLayout>
+
+        <!-- ROW 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="4"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btn5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="5"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btn6"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_number"
+                android:text="6"
+                android:textColor="@color/sls_white"
+                android:textSize="21sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <Button
+                android:id="@+id/btnPlus"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_operator"
+                android:text="+"
+                android:textColor="@color/sls_white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+        </LinearLayout>
+
+        <!-- ROW 4 WITH LARGE NEXT ITEM -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn1"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="1"
+                        android:textColor="@color/sls_white"
+                        android:textSize="21sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                    <Button
+                        android:id="@+id/btn2"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="2"
+                        android:textColor="@color/sls_white"
+                        android:textSize="21sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                    <Button
+                        android:id="@+id/btn3"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="3"
+                        android:textColor="@color/sls_white"
+                        android:textSize="21sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSign"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_operator"
+                        android:text="+/−"
+                        android:textColor="@color/sls_white"
+                        android:textSize="16sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                    <Button
+                        android:id="@+id/btn0"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="0"
+                        android:textColor="@color/sls_white"
+                        android:textSize="21sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                    <Button
+                        android:id="@+id/btn00"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="00"
+                        android:textColor="@color/sls_white"
+                        android:textSize="18sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- LARGE NEXT ITEM -->
+            <Button
+                android:id="@+id/btnNextItem"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/bg_calculator_next"
+                android:text="⊕&#10;NEXT&#10;ITEM"
+                android:textColor="@color/sls_white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="4dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- BOTTOM TOTAL / BILL -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/sls_surface">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TOTAL"
+                android:textColor="@color/sls_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/totalText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0"
+                android:textColor="@color/sls_white"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnFinalTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_secondary_button"
+            android:text="VIEW BILL"
+            android:textColor="@color/sls_gold_light"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:minWidth="0dp"
+            android:minHeight="0dp" />
+
+        <Button
+            android:id="@+id/btnGenerateBill"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_primary_button"
+            android:text="GENERATE BILL"
+            android:textColor="@color/sls_white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:minWidth="0dp"
+            android:minHeight="0dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
