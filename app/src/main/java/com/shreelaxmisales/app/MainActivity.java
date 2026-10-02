@@ -1,38 +1,54 @@
 package com.shreelaxmisales.app;
 
-import android.app.Activity;
-import android.os.Bundle;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.text.InputType;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
-import android.widget.*;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private EditText itemName;
     private EditText quantity;
     private EditText rate;
 
-    private TextView itemTotal;
     private TextView totalText;
     private TextView invoicePreview;
+    private TextView itemCountText;
+    private TextView lastItemText;
 
-    private LinearLayout itemList;
+    private Button btnMultiply;
+    private Button btnNextItem;
 
-    private final ArrayList<BillItem> items = new ArrayList<>();
+    private final ArrayList<BillItem> billItems = new ArrayList<>();
 
-    private double currentTotal = 0;
+    private double grandTotal = 0.0;
 
-    // Calculator
-    private double calculatorValue = 0;
+    private EditText activeField;
+
     private String calculatorOperator = "";
-    private boolean newCalculatorValue = true;
+    private double calculatorValue = 0.0;
+    private boolean waitingForSecondValue = false;
+
+    private SharedPreferences preferences;
+
+    private static final String PREFS = "ShreeLaxmiSalesPrefs";
+    private static final String LAST_MONTH = "last_month";
+    private static final String LAST_NUMBER = "last_number";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,881 +56,634 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        connectViews();
-        setupCalculator();
-        setupBilling();
-
-        updateItemTotal();
-        updateInvoicePreview();
-    }
-
-    private void connectViews() {
-
         itemName = findViewById(R.id.itemName);
         quantity = findViewById(R.id.quantity);
         rate = findViewById(R.id.rate);
 
-        itemTotal = findViewById(R.id.itemTotal);
         totalText = findViewById(R.id.totalText);
         invoicePreview = findViewById(R.id.invoicePreview);
+        itemCountText = findViewById(R.id.itemCountText);
+        lastItemText = findViewById(R.id.lastItemText);
 
-        itemList = findViewById(R.id.itemList);
+        btnMultiply = findViewById(R.id.btnMultiply);
+        btnNextItem = findViewById(R.id.btnNextItem);
+
+        preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
+
+        setupInvoiceNumber();
+
+        setupNumericFields();
+
+        setupCalculator();
+
+        setupMultiplyButton();
+
+        setupNextItem();
+
+        setupOtherButtons();
+
+        focusQuantity();
     }
 
-    // --------------------------------------------------
-    // BILLING
-    // --------------------------------------------------
+    // ------------------------------------------------------------
+    // NUMERIC FIELD SETUP
+    // ------------------------------------------------------------
 
-    private void setupBilling() {
+    private void setupNumericFields() {
 
-        quantity.addTextChangedListener(
-                new SimpleTextWatcher() {
-                    @Override
-                    public void afterTextChanged(
-                            android.text.Editable s) {
-                        updateItemTotal();
-                    }
-                }
-        );
+        quantity.setShowSoftInputOnFocus(false);
+        rate.setShowSoftInputOnFocus(false);
 
-        rate.addTextChangedListener(
-                new SimpleTextWatcher() {
-                    @Override
-                    public void afterTextChanged(
-                            android.text.Editable s) {
-                        updateItemTotal();
-                    }
-                }
-        );
+        quantity.setCursorVisible(false);
+        rate.setCursorVisible(false);
 
-        findViewById(R.id.nextItemButton)
-                .setOnClickListener(v -> addCurrentItem());
+        quantity.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                activeField = quantity;
+            }
+        });
 
-        findViewById(R.id.finalTotalButton)
-                .setOnClickListener(v -> showFinalTotal());
+        rate.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                activeField = rate;
+            }
+        });
 
-        findViewById(R.id.generateBillButton)
-                .setOnClickListener(v -> generateBill());
+        quantity.setOnClickListener(v -> {
+            activeField = quantity;
+            hideKeyboard();
+        });
+
+        rate.setOnClickListener(v -> {
+            activeField = rate;
+            hideKeyboard();
+        });
+
+        itemName.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                activeField = null;
+            }
+        });
     }
 
-    private void updateItemTotal() {
+    private void focusQuantity() {
 
-        double q = getNumber(quantity);
-        double r = getNumber(rate);
+        itemName.clearFocus();
+        rate.clearFocus();
 
-        double total = q * r;
+        quantity.requestFocus();
 
-        itemTotal.setText(
-                "₹" + formatMoney(total)
-        );
+        activeField = quantity;
+
+        hideKeyboard();
+
+        quantity.setSelection(quantity.length());
+    }
+
+    private void focusRate() {
+
+        quantity.clearFocus();
+
+        rate.requestFocus();
+
+        activeField = rate;
+
+        hideKeyboard();
+
+        rate.setSelection(rate.length());
+    }
+
+    private void hideKeyboard() {
+
+        View view = getCurrentFocus();
+
+        if (view != null) {
+
+            InputMethodManager imm =
+                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(
+                        view.getWindowToken(),
+                        0
+                );
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // MULTIPLY BUTTON
+    // ------------------------------------------------------------
+
+    private void setupMultiplyButton() {
+
+        btnMultiply.setOnClickListener(v -> {
+
+            String quantityValue = quantity.getText().toString().trim();
+
+            if (quantityValue.isEmpty()) {
+                quantity.setText("0");
+            }
+
+            focusRate();
+        });
+    }
+
+    // ------------------------------------------------------------
+    // NEXT ITEM
+    // ------------------------------------------------------------
+
+    private void setupNextItem() {
+
+        btnNextItem.setOnClickListener(v -> addCurrentItem());
     }
 
     private void addCurrentItem() {
 
-        double q = getNumber(quantity);
-        double r = getNumber(rate);
+        double qty = getNumber(quantity);
+        double price = getNumber(rate);
 
-        if (q <= 0 || r < 0) {
-
+        if (qty <= 0) {
             Toast.makeText(
                     this,
-                    "Enter quantity and rate",
+                    "Enter quantity first",
                     Toast.LENGTH_SHORT
             ).show();
 
+            focusQuantity();
             return;
         }
+
+        if (price < 0) {
+            Toast.makeText(
+                    this,
+                    "Enter a valid rate",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            focusRate();
+            return;
+        }
+
+        double itemTotal = qty * price;
 
         String name = itemName.getText()
                 .toString()
                 .trim();
 
         if (name.isEmpty()) {
-            name = "Item " + (items.size() + 1);
+            name = "Item " + (billItems.size() + 1);
         }
 
-        double total = q * r;
-
-        BillItem item =
+        billItems.add(
                 new BillItem(
                         name,
-                        q,
-                        r,
-                        total
-                );
+                        qty,
+                        price,
+                        itemTotal
+                )
+        );
 
-        items.add(item);
-
-        currentTotal += total;
-
-        addItemRow(item);
+        grandTotal += itemTotal;
 
         updateTotal();
 
-        clearCurrentItem();
-    }
-
-    private void addItemRow(BillItem item) {
-
-        LinearLayout row =
-                new LinearLayout(this);
-
-        row.setOrientation(
-                LinearLayout.HORIZONTAL
+        itemCountText.setText(
+                billItems.size() + " item"
+                        + (billItems.size() == 1 ? "" : "s")
+                        + " added"
         );
 
-        row.setGravity(
-                android.view.Gravity.CENTER_VERTICAL
-        );
-
-        row.setPadding(
-                16,
-                12,
-                16,
-                12
-        );
-
-        row.setBackgroundColor(
-                Color.rgb(21, 29, 48)
-        );
-
-        LinearLayout details =
-                new LinearLayout(this);
-
-        details.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        TextView name =
-                new TextView(this);
-
-        name.setText(item.name);
-
-        name.setTextColor(
-                Color.WHITE
-        );
-
-        name.setTextSize(16);
-
-        TextView calculation =
-                new TextView(this);
-
-        calculation.setText(
-                formatQuantity(item.quantity)
+        lastItemText.setText(
+                formatNumber(qty)
                         + " × ₹"
-                        + formatMoney(item.rate)
+                        + formatNumber(price)
                         + " = ₹"
-                        + formatMoney(item.total)
+                        + formatMoney(itemTotal)
         );
 
-        calculation.setTextColor(
-                Color.rgb(120, 150, 185)
-        );
+        clearCurrentItem();
 
-        calculation.setTextSize(13);
-
-        details.addView(name);
-        details.addView(calculation);
-
-        TextView total =
-                new TextView(this);
-
-        total.setText(
-                "₹" + formatMoney(item.total)
-        );
-
-        total.setTextColor(
-                Color.rgb(83, 183, 255)
-        );
-
-        total.setTextSize(17);
-
-        total.setTypeface(
-                null,
-                android.graphics.Typeface.BOLD
-        );
-
-        row.addView(
-                details,
-                new LinearLayout.LayoutParams(
-                        0,
-                        -2,
-                        1
-                )
-        );
-
-        row.addView(
-                total,
-                new LinearLayout.LayoutParams(
-                        -2,
-                        -2
-                )
-        );
-
-        LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        -2
-                );
-
-        params.setMargins(
-                0,
-                6,
-                0,
-                6
-        );
-
-        itemList.addView(
-                row,
-                params
-        );
+        focusQuantity();
     }
 
     private void clearCurrentItem() {
 
         itemName.setText("");
-        quantity.setText("");
-        rate.setText("");
 
-        itemTotal.setText("₹0");
+        quantity.setText("0");
 
-        quantity.requestFocus();
+        rate.setText("0");
+
+        calculatorOperator = "";
+
+        calculatorValue = 0.0;
+
+        waitingForSecondValue = false;
     }
 
-    private void updateTotal() {
-
-        totalText.setText(
-                "₹" + formatMoney(currentTotal)
-        );
-    }
-
-    private void showFinalTotal() {
-
-        if (items.isEmpty()) {
-
-            Toast.makeText(
-                    this,
-                    "Add at least one item",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        String invoice =
-                getCurrentInvoiceNumber();
-
-        new android.app.AlertDialog.Builder(this)
-                .setTitle("FINAL TOTAL")
-                .setMessage(
-                        "Invoice: "
-                                + invoice
-                                + "\n\n"
-                                + "Items: "
-                                + items.size()
-                                + "\n\n"
-                                + "GRAND TOTAL\n₹"
-                                + formatMoney(currentTotal)
-                )
-                .setPositiveButton(
-                        "OK",
-                        null
-                )
-                .show();
-    }
-
-    // --------------------------------------------------
-    // GENERATE BILL
-    // --------------------------------------------------
-
-    private void generateBill() {
-
-        if (!quantity.getText()
-                .toString()
-                .trim()
-                .isEmpty()) {
-
-            addCurrentItem();
-        }
-
-        if (items.isEmpty()) {
-
-            Toast.makeText(
-                    this,
-                    "Add at least one item",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        String invoice =
-                getNextInvoiceNumber();
-
-        String date =
-                new SimpleDateFormat(
-                        "dd MMM yyyy (hh:mm a)",
-                        Locale.ENGLISH
-                ).format(
-                        new Date()
-                );
-
-        StringBuilder bill =
-                new StringBuilder();
-
-        bill.append(
-                "SHREE LAXMI SALES\n\n"
-        );
-
-        bill.append(
-                "Invoice: "
-        );
-
-        bill.append(invoice);
-
-        bill.append("\n");
-
-        bill.append(
-                "Date: "
-        );
-
-        bill.append(date);
-
-        bill.append(
-                "\nMobile: 9811393412\n"
-        );
-
-        bill.append(
-                "\n--------------------------\n"
-        );
-
-        for (int i = 0; i < items.size(); i++) {
-
-            BillItem item =
-                    items.get(i);
-
-            bill.append(
-                    (i + 1)
-            );
-
-            bill.append(
-                    ". "
-            );
-
-            bill.append(
-                    item.name
-            );
-
-            bill.append(
-                    "\n   "
-            );
-
-            bill.append(
-                    formatQuantity(item.quantity)
-            );
-
-            bill.append(
-                    " × ₹"
-            );
-
-            bill.append(
-                    formatMoney(item.rate)
-            );
-
-            bill.append(
-                    " = ₹"
-            );
-
-            bill.append(
-                    formatMoney(item.total)
-            );
-
-            bill.append("\n");
-        }
-
-        bill.append(
-                "\n--------------------------\n"
-        );
-
-        bill.append(
-                "GRAND TOTAL: ₹"
-        );
-
-        bill.append(
-                formatMoney(currentTotal)
-        );
-
-        new android.app.AlertDialog.Builder(this)
-                .setTitle("BILL GENERATED")
-                .setMessage(bill.toString())
-                .setPositiveButton(
-                        "DONE",
-                        null
-                )
-                .show();
-    }
-
-    // --------------------------------------------------
+    // ------------------------------------------------------------
     // CALCULATOR
-    // --------------------------------------------------
+    // ------------------------------------------------------------
 
     private void setupCalculator() {
 
-        setNumberButton(
-                R.id.zeroButton,
-                "0"
-        );
+        setNumberButton(R.id.btn0, "0");
+        setNumberButton(R.id.btn1, "1");
+        setNumberButton(R.id.btn2, "2");
+        setNumberButton(R.id.btn3, "3");
+        setNumberButton(R.id.btn4, "4");
+        setNumberButton(R.id.btn5, "5");
+        setNumberButton(R.id.btn6, "6");
+        setNumberButton(R.id.btn7, "7");
+        setNumberButton(R.id.btn8, "8");
+        setNumberButton(R.id.btn9, "9");
 
-        setNumberButton(
-                R.id.oneButton,
-                "1"
-        );
+        setNumberButton(R.id.btn00, "00");
 
-        setNumberButton(
-                R.id.twoButton,
-                "2"
-        );
+        findViewById(R.id.btnDecimal)
+                .setOnClickListener(v -> appendDecimal());
 
-        setNumberButton(
-                R.id.threeButton,
-                "3"
-        );
+        findViewById(R.id.btnSign)
+                .setOnClickListener(v -> toggleSign());
 
-        setNumberButton(
-                R.id.fourButton,
-                "4"
-        );
+        findViewById(R.id.btnBackspace)
+                .setOnClickListener(v -> backspace());
 
-        setNumberButton(
-                R.id.fiveButton,
-                "5"
-        );
+        findViewById(R.id.btnClear)
+                .setOnClickListener(v -> clearCalculator());
 
-        setNumberButton(
-                R.id.sixButton,
-                "6"
-        );
+        findViewById(R.id.btnPercent)
+                .setOnClickListener(v -> percentage());
 
-        setNumberButton(
-                R.id.sevenButton,
-                "7"
-        );
+        findViewById(R.id.btnPlus)
+                .setOnClickListener(v -> chooseOperator("+"));
 
-        setNumberButton(
-                R.id.eightButton,
-                "8"
-        );
+        findViewById(R.id.btnMinus)
+                .setOnClickListener(v -> chooseOperator("-"));
 
-        setNumberButton(
-                R.id.nineButton,
-                "9"
-        );
+        findViewById(R.id.btnDivide)
+                .setOnClickListener(v -> chooseOperator("/"));
 
-        setNumberButton(
-                R.id.doubleZeroButton,
-                "00"
-        );
+        findViewById(R.id.btnMultiply)
+                .setOnClickListener(v -> {
 
-        findViewById(R.id.clearButton)
-                .setOnClickListener(
-                        v -> clearCalculator()
-                );
+                    calculatorOperator = "*";
 
-        findViewById(R.id.backspaceButton)
-                .setOnClickListener(
-                        v -> backspaceCalculator()
-                );
+                    calculatorValue =
+                            getActiveFieldValue();
 
-        findViewById(R.id.percentButton)
-                .setOnClickListener(
-                        v -> percentCalculator()
-                );
+                    waitingForSecondValue = true;
 
-        findViewById(R.id.signButton)
-                .setOnClickListener(
-                        v -> signCalculator()
-                );
-
-        findViewById(R.id.plusButton)
-                .setOnClickListener(
-                        v -> calculatorOperator("+")
-                );
-
-        findViewById(R.id.minusButton)
-                .setOnClickListener(
-                        v -> calculatorOperator("-")
-                );
-
-        findViewById(R.id.multiplyButton)
-                .setOnClickListener(
-                        v -> calculatorOperator("*")
-                );
-
-        findViewById(R.id.divideButton)
-                .setOnClickListener(
-                        v -> calculatorOperator("/")
-                );
-
-        findViewById(R.id.equalButton)
-                .setOnClickListener(
-                        v -> calculatorEquals()
-                );
+                    focusRate();
+                });
     }
 
-    private void setNumberButton(
-            int id,
-            String number
-    ) {
+    private void setNumberButton(int id, String value) {
 
         findViewById(id)
-                .setOnClickListener(
-                        v -> calculatorNumber(number)
-                );
+                .setOnClickListener(v -> appendNumber(value));
     }
 
-    private void calculatorNumber(
-            String number
-    ) {
+    private void appendNumber(String number) {
 
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
+        if (activeField == null) {
+            focusQuantity();
+        }
+
+        if (waitingForSecondValue) {
+
+            activeField.setText(number);
+
+            waitingForSecondValue = false;
+
+        } else {
+
+            String current =
+                    activeField.getText().toString();
+
+            if (current.equals("0")) {
+                current = "";
+            }
+
+            activeField.setText(
+                    current + number
+            );
+        }
+
+        activeField.setSelection(
+                activeField.length()
+        );
+    }
+
+    private void appendDecimal() {
+
+        if (activeField == null) {
+            focusQuantity();
+        }
 
         String current =
-                target.getText()
-                        .toString();
+                activeField.getText().toString();
 
-        if (current.equals("0")) {
-            current = "";
-        }
+        if (!current.contains(".")) {
 
-        target.setText(
-                current + number
-        );
+            if (current.isEmpty()) {
+                current = "0";
+            }
 
-        target.setSelection(
-                target.length()
-        );
-
-        updateItemTotal();
-    }
-
-    private void calculatorOperator(
-            String operator
-    ) {
-
-        double current =
-                getCalculatorInput();
-
-        if (!calculatorOperator.isEmpty()) {
-            calculateOperation(current);
-        } else {
-            calculatorValue = current;
-        }
-
-        calculatorOperator = operator;
-
-        newCalculatorValue = true;
-    }
-
-    private void calculatorEquals() {
-
-        double current =
-                getCalculatorInput();
-
-        if (!calculatorOperator.isEmpty()) {
-
-            calculateOperation(current);
-
-            setCalculatorInput(
-                    calculatorValue
+            activeField.setText(
+                    current + "."
             );
 
-            calculatorOperator = "";
-
-            newCalculatorValue = true;
+            activeField.setSelection(
+                    activeField.length()
+            );
         }
     }
 
-    private void calculateOperation(
-            double current
-    ) {
+    private void toggleSign() {
 
-        switch (calculatorOperator) {
-
-            case "+":
-                calculatorValue += current;
-                break;
-
-            case "-":
-                calculatorValue -= current;
-                break;
-
-            case "*":
-                calculatorValue *= current;
-                break;
-
-            case "/":
-
-                if (current != 0) {
-                    calculatorValue /= current;
-                }
-
-                break;
+        if (activeField == null) {
+            focusQuantity();
         }
+
+        String current =
+                activeField.getText().toString();
+
+        if (current.isEmpty()
+                || current.equals("0")) {
+            return;
+        }
+
+        if (current.startsWith("-")) {
+
+            activeField.setText(
+                    current.substring(1)
+            );
+
+        } else {
+
+            activeField.setText(
+                    "-" + current
+            );
+        }
+
+        activeField.setSelection(
+                activeField.length()
+        );
     }
 
-    private double getCalculatorInput() {
+    private void backspace() {
 
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
+        if (activeField == null) {
+            focusQuantity();
+        }
 
-        return getNumber(target);
-    }
+        String current =
+                activeField.getText().toString();
 
-    private void setCalculatorInput(
-            double value
-    ) {
+        if (current.length() <= 1) {
 
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
+            activeField.setText("0");
 
-        target.setText(
-                formatMoney(value)
+            return;
+        }
+
+        activeField.setText(
+                current.substring(
+                        0,
+                        current.length() - 1
+                )
         );
 
-        target.setSelection(
-                target.length()
+        activeField.setSelection(
+                activeField.length()
         );
-
-        updateItemTotal();
     }
 
     private void clearCalculator() {
 
-        quantity.setText("");
-        rate.setText("");
+        if (activeField == null) {
+            focusQuantity();
+        }
 
-        calculatorValue = 0;
+        activeField.setText("0");
+
         calculatorOperator = "";
 
-        updateItemTotal();
+        calculatorValue = 0.0;
+
+        waitingForSecondValue = false;
     }
 
-    private void backspaceCalculator() {
+    private void percentage() {
 
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
-
-        String text =
-                target.getText()
-                        .toString();
-
-        if (!text.isEmpty()) {
-
-            target.setText(
-                    text.substring(
-                            0,
-                            text.length() - 1
-                    )
-            );
-
-            target.setSelection(
-                    target.length()
-            );
+        if (activeField == null) {
+            focusQuantity();
         }
 
-        updateItemTotal();
-    }
-
-    private void percentCalculator() {
-
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
-
         double value =
-                getNumber(target);
+                getActiveFieldValue();
 
-        target.setText(
-                formatMoney(value / 100)
+        value = value / 100.0;
+
+        activeField.setText(
+                formatNumber(value)
         );
-
-        target.setSelection(
-                target.length()
-        );
-
-        updateItemTotal();
     }
 
-    private void signCalculator() {
+    private void chooseOperator(String operator) {
 
-        EditText target =
-                quantity.hasFocus()
-                        ? quantity
-                        : rate;
+        calculatorValue =
+                getActiveFieldValue();
 
-        double value =
-                getNumber(target);
+        calculatorOperator = operator;
 
-        target.setText(
-                formatMoney(-value)
-        );
-
-        target.setSelection(
-                target.length()
-        );
-
-        updateItemTotal();
+        waitingForSecondValue = true;
     }
 
-    // --------------------------------------------------
+    private double getActiveFieldValue() {
+
+        if (activeField == null) {
+            return 0.0;
+        }
+
+        return getNumber(activeField);
+    }
+
+    // ------------------------------------------------------------
+    // OTHER BUTTONS
+    // ------------------------------------------------------------
+
+    private void setupOtherButtons() {
+
+        findViewById(R.id.btnFinalTotal)
+                .setOnClickListener(v -> showBillSummary());
+
+        findViewById(R.id.btnGenerateBill)
+                .setOnClickListener(v -> showBillSummary());
+    }
+
+    // ------------------------------------------------------------
+    // BILL SUMMARY
+    // ------------------------------------------------------------
+
+    private void showBillSummary() {
+
+        if (billItems.isEmpty()) {
+
+            Toast.makeText(
+                    this,
+                    "Add at least one item",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        StringBuilder bill = new StringBuilder();
+
+        bill.append("SHREE LAXMI SALES\n");
+        bill.append("9811393412\n\n");
+
+        bill.append("Invoice: ")
+                .append(invoicePreview.getText())
+                .append("\n");
+
+        bill.append(
+                new SimpleDateFormat(
+                        "dd MMM yyyy (hh:mm a)",
+                        Locale.getDefault()
+                ).format(new Date())
+        );
+
+        bill.append("\n\n");
+
+        for (int i = 0; i < billItems.size(); i++) {
+
+            BillItem item =
+                    billItems.get(i);
+
+            bill.append(i + 1)
+                    .append(". ")
+                    .append(item.name)
+                    .append("\n");
+
+            bill.append("   ")
+                    .append(formatNumber(item.quantity))
+                    .append(" × ₹")
+                    .append(formatNumber(item.rate))
+                    .append(" = ₹")
+                    .append(formatMoney(item.total))
+                    .append("\n");
+        }
+
+        bill.append("\n--------------------\n");
+
+        bill.append("TOTAL: ₹")
+                .append(formatMoney(grandTotal));
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Bill Preview")
+                .setMessage(bill.toString())
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    // ------------------------------------------------------------
+    // TOTAL
+    // ------------------------------------------------------------
+
+    private void updateTotal() {
+
+        totalText.setText(
+                "₹" + formatMoney(grandTotal)
+        );
+    }
+
+    // ------------------------------------------------------------
     // INVOICE NUMBER
-    // --------------------------------------------------
+    // ------------------------------------------------------------
 
-    private String getCurrentInvoiceNumber() {
-
-        String month =
-                new SimpleDateFormat(
-                        "MMM",
-                        Locale.ENGLISH
-                ).format(
-                        new Date()
-                ).toUpperCase();
-
-        SharedPreferences prefs =
-                getSharedPreferences(
-                        "invoice_data",
-                        MODE_PRIVATE
-                );
-
-        String savedMonth =
-                prefs.getString(
-                        "month",
-                        ""
-                );
-
-        int number =
-                prefs.getInt(
-                        "number",
-                        0
-                );
-
-        if (!month.equals(savedMonth)) {
-            number = 0;
-        }
-
-        return String.format(
-                Locale.ENGLISH,
-                "%s %02d",
-                month,
-                number + 1
-        );
-    }
-
-    private String getNextInvoiceNumber() {
+    private void setupInvoiceNumber() {
 
         String month =
                 new SimpleDateFormat(
                         "MMM",
                         Locale.ENGLISH
-                ).format(
-                        new Date()
-                ).toUpperCase();
-
-        SharedPreferences prefs =
-                getSharedPreferences(
-                        "invoice_data",
-                        MODE_PRIVATE
-                );
+                )
+                        .format(new Date())
+                        .toUpperCase(Locale.ENGLISH);
 
         String savedMonth =
-                prefs.getString(
-                        "month",
+                preferences.getString(
+                        LAST_MONTH,
                         ""
                 );
 
-        int number =
-                prefs.getInt(
-                        "number",
-                        0
-                );
+        int number;
 
         if (!month.equals(savedMonth)) {
+
             number = 1;
+
+            preferences.edit()
+                    .putString(
+                            LAST_MONTH,
+                            month
+                    )
+                    .putInt(
+                            LAST_NUMBER,
+                            number
+                    )
+                    .apply();
+
         } else {
-            number++;
+
+            number =
+                    preferences.getInt(
+                            LAST_NUMBER,
+                            1
+                    );
         }
-
-        prefs.edit()
-                .putString(
-                        "month",
-                        month
-                )
-                .putInt(
-                        "number",
-                        number
-                )
-                .apply();
-
-        return String.format(
-                Locale.ENGLISH,
-                "%s %02d",
-                month,
-                number
-        );
-    }
-
-    private void updateInvoicePreview() {
 
         invoicePreview.setText(
-                getCurrentInvoiceNumber()
+                String.format(
+                        Locale.ENGLISH,
+                        "%s %02d",
+                        month,
+                        number
+                )
         );
     }
 
-    // --------------------------------------------------
+    // ------------------------------------------------------------
     // HELPERS
-    // --------------------------------------------------
+    // ------------------------------------------------------------
 
-    private double getNumber(
-            EditText editText
-    ) {
+    private double getNumber(EditText field) {
 
         try {
 
-            String value =
-                    editText.getText()
+            return Double.parseDouble(
+                    field.getText()
                             .toString()
-                            .trim();
-
-            if (value.isEmpty()) {
-                return 0;
-            }
-
-            return Double.parseDouble(value);
+                            .trim()
+            );
 
         } catch (Exception e) {
 
-            return 0;
+            return 0.0;
         }
     }
 
-    private String formatMoney(
-            double value
-    ) {
+    private String formatNumber(double value) {
 
-        if (value ==
-                (long) value) {
+        if (value == (long) value) {
 
-            return String.valueOf(
+            return String.format(
+                    Locale.ENGLISH,
+                    "%d",
                     (long) value
             );
         }
@@ -926,17 +695,7 @@ public class MainActivity extends Activity {
         );
     }
 
-    private String formatQuantity(
-            double value
-    ) {
-
-        if (value ==
-                (long) value) {
-
-            return String.valueOf(
-                    (long) value
-            );
-        }
+    private String formatMoney(double value) {
 
         return String.format(
                 Locale.ENGLISH,
@@ -945,18 +704,15 @@ public class MainActivity extends Activity {
         );
     }
 
-    // --------------------------------------------------
+    // ------------------------------------------------------------
     // BILL ITEM
-    // --------------------------------------------------
+    // ------------------------------------------------------------
 
     private static class BillItem {
 
         String name;
-
         double quantity;
-
         double rate;
-
         double total;
 
         BillItem(
@@ -967,36 +723,9 @@ public class MainActivity extends Activity {
         ) {
 
             this.name = name;
-
             this.quantity = quantity;
-
             this.rate = rate;
-
             this.total = total;
-        }
-    }
-
-    // --------------------------------------------------
-    // SIMPLE TEXT WATCHER
-    // --------------------------------------------------
-
-    private abstract static class SimpleTextWatcher
-            implements android.text.TextWatcher {
-
-        @Override
-        public void beforeTextChanged(
-                CharSequence s,
-                int start,
-                int count,
-                int after) {
-        }
-
-        @Override
-        public void onTextChanged(
-                CharSequence s,
-                int start,
-                int before,
-                int count) {
         }
     }
 }
