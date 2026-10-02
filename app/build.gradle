@@ -1,0 +1,7 @@
+plugins { id 'com.android.application' }
+
+android { namespace 'com.shreelaxmisales.app'; compileSdk 35
+    dependencies { implementation 'androidx.core:core:1.15.0' }
+
+defaultConfig { applicationId 'com.shreelaxmisales.app'; minSdk 23; targetSdk 35; versionCode 1; versionName '1.0' }
+}
