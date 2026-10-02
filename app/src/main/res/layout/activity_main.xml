@@ -117,6 +117,7 @@
         <!-- LARGE X -->
         <Button
             android:id="@+id/btnMultiply"
+            style="@android:style/Widget.Button"
             android:layout_width="68dp"
             android:layout_height="68dp"
             android:layout_marginStart="9dp"
@@ -191,7 +192,7 @@
 
     </LinearLayout>
 
-    <!-- CALCULATOR -->
+    <!-- KEYPAD -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -399,14 +400,14 @@
 
         </LinearLayout>
 
-        <!-- ROW 4 + LARGE NEXT -->
+        <!-- BOTTOM KEYPAD + LARGE NEXT -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="2"
             android:orientation="horizontal">
 
-            <!-- LEFT 3-COLUMN CALCULATOR -->
+            <!-- KEYPAD LEFT -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -515,20 +516,43 @@
 
                 </LinearLayout>
 
-                <!-- DECIMAL -->
-                <Button
-                    android:id="@+id/btnDecimal"
-                    style="@android:style/Widget.Button"
+                <!-- DECIMAL + EQUALS -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="0.7"
-                    android:layout_margin="3dp"
-                    android:background="@drawable/bg_calculator_number"
-                    android:text="."
-                    android:textColor="@color/sls_white"
-                    android:textSize="22sp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp" />
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnDecimal"
+                        style="@android:style/Widget.Button"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_number"
+                        android:text="."
+                        android:textColor="@color/sls_white"
+                        android:textSize="22sp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                    <Button
+                        android:id="@+id/btnEquals"
+                        style="@android:style/Widget.Button"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_calculator_equal"
+                        android:text="="
+                        android:textColor="@color/sls_white"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
