@@ -1,17 +1,29 @@
 package com.shreelaxmisales.app;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 public class BillPreviewActivity extends AppCompatActivity {
 
+    private LinearLayout billCard;
     private LinearLayout tableContainer;
 
     private TextView billInvoice;
@@ -32,6 +44,8 @@ public class BillPreviewActivity extends AppCompatActivity {
         // ---------------------------------------------------------
         // FIND VIEWS
         // ---------------------------------------------------------
+
+        billCard = findViewById(R.id.billCard);
 
         tableContainer =
                 findViewById(R.id.tableContainer);
@@ -95,27 +109,32 @@ public class BillPreviewActivity extends AppCompatActivity {
         // ---------------------------------------------------------
 
         if (invoice != null) {
-
             billInvoice.setText(invoice);
         }
 
         if (dateTime != null) {
-
             billDateTime.setText(dateTime);
         }
 
         if (grandTotal != null) {
-
             billGrandTotal.setText(
                     "₹" + grandTotal
             );
         }
 
         // ---------------------------------------------------------
-        // CREATE TABLE ROWS
+        // CREATE TABLE
         // ---------------------------------------------------------
 
         createBillRows();
+
+        // ---------------------------------------------------------
+        // SEND ON WHATSAPP
+        // ---------------------------------------------------------
+
+        btnSendWhatsApp.setOnClickListener(
+                view -> shareBillImage()
+        );
 
         // ---------------------------------------------------------
         // NEW BILL
@@ -124,25 +143,19 @@ public class BillPreviewActivity extends AppCompatActivity {
         btnNewBill.setOnClickListener(
                 view -> {
 
-                    /*
-                     * Returning to MainActivity starts a fresh
-                     * billing screen.
-                     */
+                    Intent intent =
+                            new Intent(
+                                    BillPreviewActivity.this,
+                                    MainActivity.class
+                            );
+
+                    intent.addFlags(
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    );
+
+                    startActivity(intent);
+
                     finish();
-                }
-        );
-
-        // ---------------------------------------------------------
-        // WHATSAPP
-        // ---------------------------------------------------------
-
-        btnSendWhatsApp.setOnClickListener(
-                view -> {
-
-                    /*
-                     * WhatsApp image sharing will be implemented
-                     * in the next step.
-                     */
                 }
         );
     }
@@ -177,7 +190,7 @@ public class BillPreviewActivity extends AppCompatActivity {
     }
 
     // =============================================================
-    // ADD ONE ROW
+    // ADD TABLE ROW
     // =============================================================
 
     private void addBillRow(
@@ -206,10 +219,6 @@ public class BillPreviewActivity extends AppCompatActivity {
                 dp(12)
         );
 
-        /*
-         * Alternate row background makes the table easier
-         * to read while keeping the dark premium design.
-         */
         if (serialNumber % 2 == 0) {
 
             row.setBackgroundColor(
@@ -227,9 +236,7 @@ public class BillPreviewActivity extends AppCompatActivity {
             );
         }
 
-        // ---------------------------------------------------------
         // S.NO.
-        // ---------------------------------------------------------
 
         TextView serial =
                 createCell(
@@ -242,9 +249,7 @@ public class BillPreviewActivity extends AppCompatActivity {
 
         row.addView(serial);
 
-        // ---------------------------------------------------------
         // ITEM
-        // ---------------------------------------------------------
 
         TextView name =
                 createItemCell(
@@ -253,9 +258,7 @@ public class BillPreviewActivity extends AppCompatActivity {
 
         row.addView(name);
 
-        // ---------------------------------------------------------
         // QTY
-        // ---------------------------------------------------------
 
         TextView qty =
                 createCell(
@@ -266,9 +269,7 @@ public class BillPreviewActivity extends AppCompatActivity {
 
         row.addView(qty);
 
-        // ---------------------------------------------------------
         // RATE
-        // ---------------------------------------------------------
 
         TextView rateView =
                 createCell(
@@ -279,9 +280,7 @@ public class BillPreviewActivity extends AppCompatActivity {
 
         row.addView(rateView);
 
-        // ---------------------------------------------------------
         // AMOUNT
-        // ---------------------------------------------------------
 
         TextView amountView =
                 createCell(
@@ -298,28 +297,41 @@ public class BillPreviewActivity extends AppCompatActivity {
 
         amountView.setTypeface(
                 null,
-                android.graphics.Typeface.BOLD
+                Typeface.BOLD
         );
 
         row.addView(amountView);
 
-        // ---------------------------------------------------------
         // ADD ROW
-        // ---------------------------------------------------------
 
         tableContainer.addView(row);
 
-        /*
-         * Horizontal separator.
-         */
-        ViewLine separator =
-                new ViewLine(this);
+        View separator =
+                new View(this);
 
-        tableContainer.addView(separator);
+        separator.setBackgroundColor(
+                Color.parseColor(
+                        "#25334D"
+                )
+        );
+
+        LinearLayout.LayoutParams separatorParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(1)
+                );
+
+        separator.setLayoutParams(
+                separatorParams
+        );
+
+        tableContainer.addView(
+                separator
+        );
     }
 
     // =============================================================
-    // NORMAL TABLE CELL
+    // NORMAL CELL
     // =============================================================
 
     private TextView createCell(
@@ -388,17 +400,141 @@ public class BillPreviewActivity extends AppCompatActivity {
                 Gravity.CENTER_VERTICAL
         );
 
-        /*
-         * Prevent very long item names from making the table
-         * unusable.
-         */
         textView.setMaxLines(2);
 
         return textView;
     }
 
     // =============================================================
-    // DP HELPER
+    // SHARE BILL IMAGE
+    // =============================================================
+
+    private void shareBillImage() {
+
+        /*
+         * Make sure the bill has been laid out before
+         * taking the screenshot.
+         */
+
+        billCard.post(
+                () -> {
+
+                    try {
+
+                        Bitmap bitmap =
+                                Bitmap.createBitmap(
+                                        billCard.getWidth(),
+                                        billCard.getHeight(),
+                                        Bitmap.Config.ARGB_8888
+                                );
+
+                        Canvas canvas =
+                                new Canvas(bitmap);
+
+                        billCard.draw(canvas);
+
+                        File billsDirectory =
+                                new File(
+                                        getCacheDir(),
+                                        "bills"
+                                );
+
+                        if (!billsDirectory.exists()) {
+
+                            boolean created =
+                                    billsDirectory.mkdirs();
+
+                            if (!created) {
+
+                                Toast.makeText(
+                                        this,
+                                        "Unable to create bill file",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                                return;
+                            }
+                        }
+
+                        String fileName =
+                                "Bill_"
+                                        + System.currentTimeMillis()
+                                        + ".png";
+
+                        File imageFile =
+                                new File(
+                                        billsDirectory,
+                                        fileName
+                                );
+
+                        FileOutputStream outputStream =
+                                new FileOutputStream(
+                                        imageFile
+                                );
+
+                        bitmap.compress(
+                                Bitmap.CompressFormat.PNG,
+                                100,
+                                outputStream
+                        );
+
+                        outputStream.flush();
+
+                        outputStream.close();
+
+                        bitmap.recycle();
+
+                        Uri imageUri =
+                                FileProvider.getUriForFile(
+                                        this,
+                                        getPackageName()
+                                                + ".fileprovider",
+                                        imageFile
+                                );
+
+                        Intent shareIntent =
+                                new Intent(
+                                        Intent.ACTION_SEND
+                                );
+
+                        shareIntent.setType(
+                                "image/png"
+                        );
+
+                        shareIntent.putExtra(
+                                Intent.EXTRA_STREAM,
+                                imageUri
+                        );
+
+                        shareIntent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+
+                        /*
+                         * Open the Android share chooser.
+                         * WhatsApp will appear if installed.
+                         */
+                        startActivity(
+                                Intent.createChooser(
+                                        shareIntent,
+                                        "Send Bill"
+                                )
+                        );
+
+                    } catch (Exception e) {
+
+                        Toast.makeText(
+                                this,
+                                "Unable to create bill image",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    // =============================================================
+    // DP
     // =============================================================
 
     private int dp(int value) {
@@ -409,34 +545,5 @@ public class BillPreviewActivity extends AppCompatActivity {
                         .getDisplayMetrics()
                         .density
         );
-    }
-
-    // =============================================================
-    // SIMPLE DIVIDER VIEW
-    // =============================================================
-
-    private static class ViewLine
-            extends android.view.View {
-
-        ViewLine(
-                android.content.Context context
-        ) {
-
-            super(context);
-
-            setBackgroundColor(
-                    android.graphics.Color
-                            .parseColor(
-                                    "#25334D"
-                            )
-            );
-
-            setLayoutParams(
-                    new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            1
-                    )
-            );
-        }
     }
 }
